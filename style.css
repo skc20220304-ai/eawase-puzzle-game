@@ -23,3 +23,13 @@
 .finished-actions[hidden]{display:none}
 .finished-actions button{min-height:43px;border:0;border-radius:12px;padding:9px 13px;background:var(--pink);color:#fff;font:700 13px inherit;box-shadow:0 3px 0 #d35979}
 .tile{touch-action:manipulation}
+
+/* 絵を見比べて選べるサムネイル */
+.picture-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 15px}
+.picture-choice{display:flex;align-items:center;gap:6px;min-width:0;padding:5px;border:2px solid #f4dce3;border-radius:13px;background:#fff;color:#9a7281;font:700 10px/1.2 inherit;text-align:left;cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
+.picture-choice img{width:39px;height:39px;flex:none;border-radius:9px;object-fit:cover}
+.picture-choice span{overflow:hidden;text-overflow:ellipsis}
+.picture-choice:hover{transform:translateY(-1px)}
+.picture-choice.selected{border-color:var(--pink);background:#fff0f4;color:#c84f70;box-shadow:0 0 0 2px #fff}
+.picture-choice:focus-visible{outline:3px solid #ffd662;outline-offset:2px}
+@media(max-width:370px){.picture-choice{gap:4px;font-size:9px}.picture-choice img{width:33px;height:33px}}
