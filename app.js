@@ -188,8 +188,6 @@ document.querySelector('#howToButton').addEventListener('click', () => openModal
 document.querySelector('#howToStartButton').addEventListener('click', () => { closeModal('howToModal'); guide.hidden = false; updateGuideTarget(); });
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.dataset.close)));
 document.querySelectorAll('.modal').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal) closeModal(modal.id); }));
-document.querySelector('#soundButton').addEventListener('click', event => { soundOn = !soundOn; event.currentTarget.textContent = soundOn ? '♪' : '×'; event.currentTarget.setAttribute('aria-pressed', soundOn); event.currentTarget.setAttribute('aria-label', soundOn ? '効果音をオフにする' : '効果音をオンにする'); });
-document.querySelector('#voiceButton').addEventListener('click', event => { voiceOn = !voiceOn; event.currentTarget.classList.toggle('active', voiceOn); event.currentTarget.setAttribute('aria-pressed', voiceOn); event.currentTarget.setAttribute('aria-label', voiceOn ? '声の案内をオフにする' : '声の案内をオンにする'); if (voiceOn) speak('声の案内をオンにしたよ'); });
 
 buildPuzzlePools();
 stars.textContent = completed;
