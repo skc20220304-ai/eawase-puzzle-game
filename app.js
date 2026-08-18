@@ -95,7 +95,7 @@ function renderPicturePicker() {
   });
 }
 
-function render() {
+function render(isComplete = false) {
   const picture = pictures[pictureIndex];
   document.querySelector('#pictureName').textContent = picture.name;
   document.querySelector('#referenceImage').src = picture.file;
@@ -110,11 +110,12 @@ function render() {
   puzzle.innerHTML = '';
   tiles.forEach((piece, index) => {
     const tile = document.createElement('button');
-    tile.className = `tile ${piece === tiles.length - 1 ? 'blank' : ''}`;
+    const isBlank = piece === tiles.length - 1 && !isComplete;
+    tile.className = `tile ${isBlank ? 'blank' : ''}`;
     tile.type = 'button';
-    tile.setAttribute('aria-label', piece === tiles.length - 1 ? 'あいている ばしょ' : `えの ピース ${piece + 1}`);
+    tile.setAttribute('aria-label', isBlank ? 'あいている ばしょ' : `えの ピース ${piece + 1}`);
     tile.setAttribute('aria-rowindex', Math.floor(index / gridSize()) + 1);
-    if (piece !== tiles.length - 1) {
+    if (!isBlank) {
       const row = Math.floor(piece / gridSize()), column = piece % gridSize(), position = gridSize() === 1 ? 0 : 100 / (gridSize() - 1);
       tile.style.backgroundImage = `url("${picture.file}")`;
       tile.style.backgroundPosition = `${column * position}% ${row * position}%`;
@@ -161,7 +162,7 @@ function hint() {
 function win() {
   const key = progressKey(), record = currentProgress();
   record.completed += 1; record.bestMoves = record.bestMoves === null ? moves : Math.min(record.bestMoves, moves);
-  progress.puzzles[key] = record; saveProgress(); completed += 1; localStorage.setItem('puzzleStars', completed);
+  progress.puzzles[key] = record; saveProgress(); completed += 1; localStorage.setItem('puzzleStars', completed); render(true);
   stars.textContent = completed; renderPicturePicker(); document.querySelector('#bestMoves').textContent = `ベスト ${record.bestMoves}かい`; document.querySelector('.game-card').classList.add('complete'); document.querySelector('#finishedActions').hidden = false;
   document.querySelector('#collectionMessage').textContent = completed % 3 === 0 ? 'あたらしい えが あそべるよ！' : praises[Math.floor(Math.random() * praises.length)];
   message.textContent = `${praises[Math.floor(Math.random() * praises.length)]} ${moves}かいで できたよ！`;
