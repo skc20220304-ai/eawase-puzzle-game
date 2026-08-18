@@ -1,11 +1,46 @@
-﻿<!doctype html>
-<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="theme-color" content="#fff4f7"><title>えあわせ ぱずる</title><link rel="stylesheet" href="style.css"></head>
-<body><main class="app"><header><div class="logo"><span>✿</span>えあわせ ぱずる</div><button class="sound" id="soundButton" aria-label="音のオンオフ">♪</button></header>
-<section class="hero"><p>できたら、うれしい！</p><h1>かわいい えを<br>そろえよう</h1><div class="cloud c1">☁</div><div class="cloud c2">☁</div></section>
-<section class="game-card"><div class="picture-info"><div><span class="label">きょうの え</span><strong id="pictureName">あめあがりの ねこ</strong></div><button class="new-picture" id="newPicture">ちがう え</button></div><div class="picture-picker" id="picturePicker" role="group" aria-label="えをえらぶ"></div>
-<div class="difficulty" aria-label="むずかしさ"><button data-level="easy" class="selected">かんたん<br><small>8 うごかす</small></button><button data-level="normal">ふつう<br><small>28 うごかす</small></button><button data-level="hard">むずかしい<br><small>80 うごかす</small></button></div>
-<div class="puzzle-wrap"><div class="puzzle" id="puzzle" role="grid" aria-label="えあわせパズル"></div><div class="sparkles" id="sparkles" aria-hidden="true"></div></div>
-<p class="message" id="message" aria-live="polite">あいている ばしょの となりを おしてね</p><div class="actions"><button class="hint" id="hintButton">ヒント</button><button class="restart" id="restartButton">もういちど</button></div><div class="finished-actions" id="finishedActions" hidden><span>🎉 えが できたよ！</span><button id="nextButton">ちがう えで あそぶ</button></div></section>
-<section class="collection"><div><span>🏅 できた かず</span><strong id="stars">0</strong></div><p>たくさん できたね！</p></section></main>
-<div class="celebration" id="celebration" hidden><div class="celebrate-box"><span class="big-star">⭐</span><p>すごい！できた！</p><h2 id="praise">えあわせ名人！</h2><button id="nextButton">つぎの えで あそぶ</button></div></div><script src="app.js"></script></body></html>
-
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="theme-color" content="#fff4f7">
+  <meta name="description" content="5〜7歳の子ども向け、やさしいえあわせスライドパズル">
+  <title>えあわせ ぱずる</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="logo"><span>✿</span>えあわせ ぱずる</div>
+      <div class="sound-controls" aria-label="音の設定">
+        <button class="sound" id="soundButton" type="button" aria-label="効果音をオフにする" aria-pressed="true">♪</button>
+        <button class="voice" id="voiceButton" type="button" aria-label="声の案内をオンにする" aria-pressed="false">こえ</button>
+      </div>
+    </header>
+    <section class="hero" aria-labelledby="gameTitle">
+      <p>できたら、うれしい！</p>
+      <h1 id="gameTitle">かわいい えを<br>そろえよう</h1>
+      <div class="cloud c1" aria-hidden="true">☁</div><div class="cloud c2" aria-hidden="true">☁</div>
+    </section>
+    <section class="game-card" aria-label="パズル">
+      <div class="picture-info"><div><span class="label">きょうの え</span><strong id="pictureName">あめあがりの ねこ</strong></div><button class="new-picture" id="newPicture" type="button">ちがう え</button></div>
+      <div class="reference-row">
+        <button class="reference-button" id="referenceButton" type="button" aria-label="完成した絵を大きく見る"><img id="referenceImage" src="assets/kitten-rainy-day.png" alt="あめあがりの ねこ 完成見本"><span><small>かんせい みほん</small><strong>絵をみながら<br>そろえよう</strong></span></button>
+        <div class="move-stats" aria-label="今回の記録"><span>うごかした かず</span><strong><b id="moveCount">0</b> かい</strong><small id="bestMoves">ベスト —</small></div>
+      </div>
+      <div class="picture-picker" id="picturePicker" role="group" aria-label="えをえらぶ"></div>
+      <div class="difficulty-heading"><span>むずかしさ</span><button class="how-to-button" id="howToButton" type="button">あそびかた</button></div>
+      <div class="difficulty" aria-label="むずかしさ"><button data-level="easy" type="button" class="selected">かんたん<br><small>すぐ できる</small></button><button data-level="normal" type="button">ふつう<br><small>ちょっと なやむ</small></button><button data-level="hard" type="button">むずかしい<br><small>じっくり かんがえる</small></button></div>
+      <div class="guide" id="guide" hidden><span class="guide-arrow" aria-hidden="true">↘</span><span>ひかっている ピースを おしてみよう！</span><button id="guideClose" type="button" aria-label="案内を閉じる">×</button></div>
+      <div class="puzzle-wrap"><div class="puzzle" id="puzzle" role="grid" aria-label="えあわせパズル"></div><div class="sparkles" id="sparkles" aria-hidden="true"></div></div>
+      <p class="message" id="message" aria-live="polite">あいている ばしょの となりを おしてね</p>
+      <div class="actions"><button class="hint" id="hintButton" type="button">ヒント</button><button class="restart" id="restartButton" type="button">もういちど</button></div>
+      <div class="finished-actions" id="finishedActions" hidden><span>🎉 えが できたよ！</span><div><button class="secondary-action" id="playAgainButton" type="button">もういちど</button><button class="next-action" id="nextPictureButton" type="button">つぎの え</button></div></div>
+    </section>
+    <section class="collection" aria-label="できた記録"><div><span>🏅 できた かず</span><strong id="stars">0</strong></div><p id="collectionMessage">たくさん できたね！</p></section>
+  </main>
+  <div class="modal" id="referenceModal" hidden><div class="modal-card image-modal-card" role="dialog" aria-modal="true" aria-labelledby="referenceModalTitle"><button class="modal-close" type="button" data-close="referenceModal" aria-label="閉じる">×</button><h2 id="referenceModalTitle">かんせい みほん</h2><img id="largeReferenceImage" src="assets/kitten-rainy-day.png" alt="完成見本"><p id="largeReferenceName">あめあがりの ねこ</p></div></div>
+  <div class="modal" id="howToModal" hidden><div class="modal-card how-to-card" role="dialog" aria-modal="true" aria-labelledby="howToTitle"><button class="modal-close" type="button" data-close="howToModal" aria-label="閉じる">×</button><h2 id="howToTitle">あそびかた</h2><ol><li><span>1</span><p>完成見本をみて、絵をおぼえよう。</p></li><li><span>2</span><p>あいている場所のとなりをおそう。</p></li><li><span>3</span><p>ぜんぶそろったら、できあがり！</p></li></ol><button class="modal-primary" id="howToStartButton" type="button">やってみる</button></div></div>
+  <script src="app.js"></script>
+</body>
+</html>
