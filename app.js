@@ -6,37 +6,52 @@ const pictures = [
   { name: 'いちごの ケーキ', file: 'assets/strawberry-cake.png', category: 'たべもの' },
   { name: 'うみの かめ', file: 'assets/sea-turtle-ocean.png', category: 'しぜん' }
 ];
-const difficultyConfig = { easy: { min: 3, max: 5 }, normal: { min: 7, max: 10 }, hard: { min: 12, max: 18 } };
+const difficultyConfig = { easy: { grid: 2, min: 3, max: 5 }, normal: { grid: 3, min: 7, max: 10 }, hard: { grid: 4, min: 18, max: 26 } };
 const praises = ['えあわせ名人！', 'すてき！だいせいこう！', 'キラキラ 100てん！', 'やったね！すごい！'];
-const solvedState = '012345678';
 let level = 'easy', pictureIndex = 0, tiles = [], blank = 8, moves = 0;
 let completed = Number(localStorage.getItem('puzzleStars') || 0), soundOn = true, voiceOn = false;
-let puzzlePools = {}, nextStateMap = new Map(), progress = loadProgress();
+let puzzlePools = {}, nextStateMaps = {}, progress = loadProgress();
 const puzzle = document.querySelector('#puzzle'), message = document.querySelector('#message'), stars = document.querySelector('#stars'), moveCount = document.querySelector('#moveCount'), sparkles = document.querySelector('#sparkles'), picturePicker = document.querySelector('#picturePicker'), guide = document.querySelector('#guide'), newPicture = document.querySelector('#newPicture');
 
-function neighbors(index) { const adjacent = []; if (index > 2) adjacent.push(index - 3); if (index < 6) adjacent.push(index + 3); if (index % 3) adjacent.push(index - 1); if (index % 3 < 2) adjacent.push(index + 1); return adjacent; }
+function gridSize() { return difficultyConfig[level].grid; }
+function solvedState(size = gridSize()) { return Array.from({ length: size * size }, (_, index) => index).join(','); }
+function decodeState(state) { return state.split(',').map(Number); }
+function neighbors(index, size = gridSize()) { const adjacent = [], row = Math.floor(index / size), column = index % size; if (row > 0) adjacent.push(index - size); if (row < size - 1) adjacent.push(index + size); if (column > 0) adjacent.push(index - 1); if (column < size - 1) adjacent.push(index + 1); return adjacent; }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-function buildPuzzlePools() {
-  const maxDepth = Math.max(...Object.values(difficultyConfig).map(config => config.max));
-  puzzlePools = Array.from({ length: maxDepth + 1 }, () => []);
-  const queue = [{ state: solvedState, blank: 8, depth: 0 }];
-  const visited = new Set([solvedState]);
-  nextStateMap = new Map([[solvedState, null]]);
+function buildPuzzlePool(size, maxDepth) {
+  const solved = solvedState(size), pool = Array.from({ length: maxDepth + 1 }, () => []), queue = [{ state: solved, blank: size * size - 1, depth: 0 }], visited = new Set([solved]);
+  const stateMap = new Map([[solved, null]]);
   for (let cursor = 0; cursor < queue.length; cursor += 1) {
-    const current = queue[cursor];
-    puzzlePools[current.depth].push(current.state);
+    const current = queue[cursor]; pool[current.depth].push(current.state);
     if (current.depth === maxDepth) continue;
-    neighbors(current.blank).forEach(target => {
-      const characters = current.state.split('');
-      [characters[current.blank], characters[target]] = [characters[target], characters[current.blank]];
-      const nextState = characters.join('');
-      if (visited.has(nextState)) return;
-      visited.add(nextState);
-      nextStateMap.set(nextState, current.state);
-      queue.push({ state: nextState, blank: target, depth: current.depth + 1 });
+    neighbors(current.blank, size).forEach(target => {
+      const characters = decodeState(current.state); [characters[current.blank], characters[target]] = [characters[target], characters[current.blank]];
+      const nextState = characters.join(','); if (visited.has(nextState)) return;
+      visited.add(nextState); stateMap.set(nextState, current.state); queue.push({ state: nextState, blank: target, depth: current.depth + 1 });
     });
   }
+  return { pool, stateMap };
+}
+function buildPuzzlePools() {
+  puzzlePools = {}; nextStateMaps = {};
+  [difficultyConfig.easy, difficultyConfig.normal].forEach(config => { const result = buildPuzzlePool(config.grid, config.max); puzzlePools[config.grid] = result.pool; nextStateMaps[config.grid] = result.stateMap; });
+}
+function shuffleHard(size, count) {
+  const state = decodeState(solvedState(size)); let empty = state.length - 1, previous = -1;
+  for (let turn = 0; turn < count; turn += 1) {
+    const choices = neighbors(empty, size).filter(index => index !== previous); const target = choices[randomInt(0, choices.length - 1)];
+    [state[empty], state[target]] = [state[target], state[empty]]; previous = empty; empty = target;
+  }
+  return state.join(',');
+}
+
+/* 2x2/3x3 は最短手数別プール、4x4 は合法シャッフルで生成する。 */
+function createPuzzleState() {
+  const config = difficultyConfig[level];
+  if (config.grid === 4) return shuffleHard(config.grid, randomInt(config.min, config.max));
+  const options = puzzlePools[config.grid][randomInt(config.min, config.max)];
+  return options[randomInt(0, options.length - 1)];
 }
 
 function loadProgress() {
@@ -52,12 +67,9 @@ function saveProgress() { localStorage.setItem('puzzleProgressV1', JSON.stringif
 function unlockedPictureCount() { return Math.min(pictures.length, 3 + Math.floor(completed / 3)); }
 
 function setup() {
-  const config = difficultyConfig[level];
-  const targetDepth = randomInt(config.min, config.max);
-  const options = puzzlePools[targetDepth];
-  const state = options[randomInt(0, options.length - 1)];
-  tiles = state.split('').map(Number);
-  blank = tiles.indexOf(8);
+  const state = createPuzzleState();
+  tiles = decodeState(state);
+  blank = tiles.indexOf(tiles.length - 1);
   moves = 0;
   document.querySelector('.game-card').classList.remove('complete');
   document.querySelector('#finishedActions').hidden = true;
@@ -98,23 +110,31 @@ function render() {
   puzzle.innerHTML = '';
   tiles.forEach((piece, index) => {
     const tile = document.createElement('button');
-    tile.className = `tile ${piece === 8 ? 'blank' : ''}`;
+    tile.className = `tile ${piece === tiles.length - 1 ? 'blank' : ''}`;
     tile.type = 'button';
-    tile.setAttribute('aria-label', piece === 8 ? 'あいている ばしょ' : `えの ピース ${piece + 1}`);
-    tile.setAttribute('aria-rowindex', Math.floor(index / 3) + 1);
-    if (piece !== 8) {
-      const row = Math.floor(piece / 3), column = piece % 3;
+    tile.setAttribute('aria-label', piece === tiles.length - 1 ? 'あいている ばしょ' : `えの ピース ${piece + 1}`);
+    tile.setAttribute('aria-rowindex', Math.floor(index / gridSize()) + 1);
+    if (piece !== tiles.length - 1) {
+      const row = Math.floor(piece / gridSize()), column = piece % gridSize(), position = gridSize() === 1 ? 0 : 100 / (gridSize() - 1);
       tile.style.backgroundImage = `url("${picture.file}")`;
-      tile.style.backgroundPosition = `${column * 50}% ${row * 50}%`;
+      tile.style.backgroundPosition = `${column * position}% ${row * position}%`;
     } else { tile.setAttribute('aria-hidden', 'true'); tile.tabIndex = -1; }
     tile.addEventListener('click', () => move(index));
     puzzle.append(tile);
   });
+  puzzle.style.setProperty('--grid-size', gridSize());
 }
 
 function getHintTarget() {
-  const nextState = nextStateMap.get(tiles.join(''));
-  return nextState ? nextState.indexOf('8') : null;
+  const current = tiles.join(','), exactNext = nextStateMaps[gridSize()]?.get(current);
+  if (exactNext) return decodeState(exactNext).indexOf(tiles.length - 1);
+  if (tiles.every((piece, position) => piece === position)) return null;
+  const size = gridSize(), candidates = neighbors(blank, size);
+  return candidates.sort((a, b) => manhattanAfterMove(a) - manhattanAfterMove(b))[0] ?? null;
+}
+function manhattanAfterMove(target) {
+  const copy = tiles.slice(); [copy[blank], copy[target]] = [copy[target], copy[blank]]; const size = gridSize();
+  return copy.reduce((total, piece, index) => { if (piece === copy.length - 1) return total; return total + Math.abs(Math.floor(piece / size) - Math.floor(index / size)) + Math.abs(piece % size - index % size); }, 0);
 }
 function updateGuideTarget() {
   document.querySelectorAll('.tile.guide-target').forEach(tile => tile.classList.remove('guide-target'));
