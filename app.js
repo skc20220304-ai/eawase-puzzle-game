@@ -11,7 +11,8 @@ const praises = ['えあわせ名人！', 'すてき！だいせいこう！', '
 let level = 'easy', pictureIndex = 0, tiles = [], blank = 8, moves = 0;
 let completed = Number(localStorage.getItem('puzzleStars') || 0), soundOn = true, voiceOn = false;
 let puzzlePools = {}, nextStateMaps = {}, progress = loadProgress();
-const puzzle = document.querySelector('#puzzle'), message = document.querySelector('#message'), stars = document.querySelector('#stars'), moveCount = document.querySelector('#moveCount'), sparkles = document.querySelector('#sparkles'), picturePicker = document.querySelector('#picturePicker'), guide = document.querySelector('#guide'), newPicture = document.querySelector('#newPicture');
+const puzzle = document.querySelector('#puzzle'), message = document.querySelector('#message'), stars = document.querySelector('#stars'), moveCount = document.querySelector('#moveCount'), sparkles = document.querySelector('#sparkles'), picturePicker = document.querySelector('#picturePicker'), guide = document.querySelector('#guide'), newPicture = document.querySelector('#newPicture'), uploadPictureButton = document.querySelector('#uploadPictureButton'), pictureFileInput = document.querySelector('#pictureFileInput');
+let customPictureIndex = null;
 
 function gridSize() { return difficultyConfig[level].grid; }
 function solvedState(size = gridSize()) { return Array.from({ length: size * size }, (_, index) => index).join(','); }
@@ -64,7 +65,7 @@ function loadProgress() {
 function progressKey() { return `${pictureIndex}-${level}`; }
 function currentProgress() { return progress.puzzles[progressKey()] || { completed: 0, bestMoves: null }; }
 function saveProgress() { localStorage.setItem('puzzleProgressV1', JSON.stringify(progress)); }
-function unlockedPictureCount() { return Math.min(pictures.length, 3 + Math.floor(completed / 3)); }
+function unlockedPictureIndexes() { const count = Math.min(pictures.length, 3 + Math.floor(completed / 3)); return pictures.map((_, index) => index).filter(index => index < count || index === customPictureIndex); }
 
 function setup() {
   const state = createPuzzleState();
@@ -80,9 +81,9 @@ function setup() {
 
 function renderPicturePicker() {
   picturePicker.innerHTML = '';
-  const unlocked = unlockedPictureCount();
+  const unlocked = unlockedPictureIndexes();
   pictures.forEach((picture, index) => {
-    const isUnlocked = index < unlocked;
+    const isUnlocked = unlocked.includes(index);
     const button = document.createElement('button');
     button.className = `picture-choice ${index === pictureIndex ? 'selected' : ''} ${isUnlocked ? '' : 'locked'}`;
     button.type = 'button';
@@ -174,10 +175,27 @@ function beep(frequency) { try { const context = new AudioContext(), oscillator 
 function speak(text) { if (!voiceOn || !('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'ja-JP'; utterance.rate = 0.9; window.speechSynthesis.speak(utterance); }
 function openModal(id) { document.querySelector(`#${id}`).hidden = false; document.querySelector(`#${id} .modal-close`)?.focus(); }
 function closeModal(id) { document.querySelector(`#${id}`).hidden = true; }
-function nextUnlockedPicture() { const unlocked = unlockedPictureCount(); pictureIndex = (pictureIndex + 1) % unlocked; setup(); }
+function nextUnlockedPicture() { const unlocked = unlockedPictureIndexes(); if (!unlocked.length) return; const current = unlocked.indexOf(pictureIndex); pictureIndex = unlocked[(current + 1) % unlocked.length]; setup(); }
+
+function useUploadedPicture(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const sourceUrl = URL.createObjectURL(file), image = new Image();
+  image.onload = () => {
+    const size = 1200, canvas = document.createElement('canvas'), context = canvas.getContext('2d'), side = Math.min(image.naturalWidth, image.naturalHeight), left = (image.naturalWidth - side) / 2, top = (image.naturalHeight - side) / 2;
+    canvas.width = size; canvas.height = size; context.drawImage(image, left, top, side, side, 0, 0, size, size);
+    const picture = { name: 'あなたの しゃしん', file: canvas.toDataURL('image/jpeg', 0.9), category: 'オリジナル' };
+    URL.revokeObjectURL(sourceUrl);
+    if (customPictureIndex === null) { pictures.push(picture); customPictureIndex = pictures.length - 1; } else pictures[customPictureIndex] = picture;
+    pictureIndex = customPictureIndex; setup(); message.textContent = 'しゃしんの パズルだよ！'; speak('しゃしんのパズルだよ');
+  };
+  image.onerror = () => { URL.revokeObjectURL(sourceUrl); message.textContent = 'その しゃしんは つかえないみたい'; };
+  image.src = sourceUrl;
+}
 
 document.querySelectorAll('[data-level]').forEach(button => button.addEventListener('click', () => { level = button.dataset.level; document.querySelectorAll('[data-level]').forEach(item => item.classList.toggle('selected', item === button)); setup(); speak(`${button.textContent.split('\n')[0]}だよ`); }));
 newPicture.addEventListener('click', nextUnlockedPicture);
+uploadPictureButton.addEventListener('click', () => pictureFileInput.click());
+pictureFileInput.addEventListener('change', event => { useUploadedPicture(event.target.files[0]); event.target.value = ''; });
 document.querySelector('#restartButton').addEventListener('click', setup);
 document.querySelector('#playAgainButton').addEventListener('click', setup);
 document.querySelector('#nextPictureButton').addEventListener('click', nextUnlockedPicture);
