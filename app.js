@@ -118,6 +118,7 @@ function render(isComplete = false) {
     if (!isBlank) {
       const row = Math.floor(piece / gridSize()), column = piece % gridSize(), position = gridSize() === 1 ? 0 : 100 / (gridSize() - 1);
       tile.style.backgroundImage = `url("${picture.file}")`;
+      tile.style.backgroundSize = `${gridSize() * 100}% ${gridSize() * 100}%`;
       tile.style.backgroundPosition = `${column * position}% ${row * position}%`;
     } else { tile.setAttribute('aria-hidden', 'true'); tile.tabIndex = -1; }
     tile.addEventListener('click', () => move(index));
