@@ -4,7 +4,10 @@ const pictures = [
   { name: 'うちゅうの ペンギン', file: 'assets/penguin-space.png', category: 'うちゅう' },
   { name: 'まちの しょうぼうしゃ', file: 'assets/firetruck-village.png', category: 'のりもの' },
   { name: 'いちごの ケーキ', file: 'assets/strawberry-cake.png', category: 'たべもの' },
-  { name: 'うみの かめ', file: 'assets/sea-turtle-ocean.png', category: 'しぜん' }
+  { name: 'うみの かめ', file: 'assets/sea-turtle-ocean.png', category: 'しぜん' },
+  { name: 'おはなの うさぎ', file: 'assets/rabbit-flower-meadow.png', category: 'どうぶつ' },
+  { name: 'なかよし ひよこ', file: 'assets/chicks-spring-garden.png', category: 'どうぶつ' },
+  { name: 'りんごの くま', file: 'assets/bear-apple-orchard.png', category: 'どうぶつ' }
 ];
 const difficultyConfig = { easy: { grid: 2, min: 3, max: 5 }, normal: { grid: 3, min: 7, max: 10 }, hard: { grid: 4, min: 18, max: 26 } };
 const praises = ['えあわせ名人！', 'すてき！だいせいこう！', 'キラキラ 100てん！', 'やったね！すごい！'];
